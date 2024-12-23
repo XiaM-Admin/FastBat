@@ -1,1 +1,6 @@
 Bat/*
+Py/*
+
+!Bat/系统/自动关机.bat
+!Py/Test/Test.py
+__pycache__/TrayIcon.cpython-312.pyc
