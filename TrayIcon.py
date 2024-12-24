@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction, QApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtWidgets import QStyle
 import subprocess
 import os
 
@@ -10,12 +11,13 @@ class TrayIcon(QSystemTrayIcon):
        super().__init__(parent)
        
        # 确保图标文件存在
-       icon_path = "icon.png"
-       if not os.path.exists(icon_path):
-           raise FileNotFoundError(f"图标文件 {icon_path} 不存在")
-           
        # 设置图标
-       self.setIcon(QIcon(icon_path))
+       icon_path = "icon.png"
+       if os.path.exists(icon_path):
+           self.setIcon(QIcon(icon_path))
+       else:
+           app = QApplication.instance()
+           self.setIcon(app.style().standardIcon(QStyle.SP_ComputerIcon))
        
        # 创建右键菜单
        self.menu = QMenu()
