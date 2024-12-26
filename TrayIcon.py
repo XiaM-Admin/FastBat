@@ -90,9 +90,12 @@ class TrayIcon(QSystemTrayIcon):
        # 添加提示信息
        self.setToolTip("X FastBat")
 
+       # 初始化隐藏列表
+       self.hidden_items = self._load_hidden_items()
        # 初始加载脚本
        self.load_scripts()
        self.load_python_scripts()
+       
 
    def onTrayIconActivated(self, reason):
         """处理托盘图标的点击事件"""
@@ -103,10 +106,32 @@ class TrayIcon(QSystemTrayIcon):
             # 显示菜单
             self.menu.popup(pos)
 
+   def _load_hidden_items(self):
+        """读取hide.txt文件中的隐藏项目列表"""
+        hidden_items = set()
+        try:
+            if os.path.exists('hide.txt'):
+                with open('hide.txt', 'r', encoding='utf-8') as f:
+                    # 修改这里：先读取所有内容，然后按行分割
+                    for line in f.read().strip().splitlines():
+                        if line:
+                            hidden_items.add(line.strip())
+        except Exception as e:
+            self.showMessage("警告", f"读取hide.txt失败: {str(e)}", QSystemTrayIcon.Warning)
+        return hidden_items
+
+   def _should_hide_item(self, item_path):
+        """检查项目是否应该被隐藏"""
+        item_name = os.path.basename(item_path)
+        relative_path = os.path.relpath(item_path, os.getcwd())
+        return item_name in self.hidden_items or relative_path in self.hidden_items
+
    def reload_scripts(self):
         """重新加载所有脚本"""
         self.load_scripts()
         self.load_python_scripts()
+        # 初始化隐藏列表
+        self.hidden_items = self._load_hidden_items()
 
    def load_scripts(self):
         """递归加载at文件夹中的所有批处理脚本"""
@@ -139,7 +164,10 @@ class TrayIcon(QSystemTrayIcon):
         # 遍历文件夹中的所有项目
         for item in os.listdir(folder_path):
             item_path = os.path.join(folder_path, item)
-            
+            # 检查是否应该隐藏
+            if self._should_hide_item(item_path):
+                continue
+
             if os.path.isdir(item_path):
                 # 如果是文件夹，创建子菜单
                 submenu = QMenu(item, parent_menu)
@@ -163,7 +191,10 @@ class TrayIcon(QSystemTrayIcon):
         # 遍历文件夹中的所有项目
         for item in os.listdir(folder_path):
             item_path = os.path.join(folder_path, item)
-            
+            # 检查是否应该隐藏
+            if self._should_hide_item(item_path):
+                continue
+
             if os.path.isdir(item_path):
                 # 如果是文件夹，创建子菜单
                 submenu = QMenu(item, parent_menu)
